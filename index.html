@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Page Title</title>
+		 <link rel="stylesheet" type="text/css" href="styles.css">
+	</head>
+	<body style= "background-color:#7FDBFF">
+	    <h1>16-bit Calculator</h1>
+		Enter positive integers (+ - * / % ^)
+		<br/>
+		(|answer| must be less than 2^16)
+		<br/>
+		<input type = "text" id= "calc" style="width: 300px"/>
+		<button type = "button" id= "enter" onclick = "calcInput()">Enter</button>
+			    
+	    <p>This calculator does not use the javascript operators +,-,*,/,%, or Math.pow() to perform it's calculations.
+	    The only time + is used is to concatenate strings (ctrl+f the code for yourself!)
+	    <br/>
+	    <br/>
+	    note: factorial is commented out, in order to use no javascript operators it has too much recursion and errors out.
+	    :(
+	    </p>
+	    <h2 style="display:inline">How does it work?</h2> <button type = "button" id="show" onclick="showEx()">show</button>
+	    <div id = "ex" style="display:none">
+    	    <p>The calculator works the way computers add and subtract, and the other operations are done with recursive adding and subtracting. It uses specific logic gates to effectively add one bit at a time, and keeping track of the carry.</p>
+    	    <p>
+    	        Binary addition works the exact same way decimal addition works, with a very simple carry digit of 1 or 0. Because adding binary works in 1s and 0s, we can use a logic gate to simulate this.
+    	    </p>
+    	    	    <p>If you look at the last column of digits it read from top to bottom 0 1 1 0. This happens to be the same truth table as an XOR gate.</p>
+    	    
+    	    <table style="display:inline">
+    	        <tr>
+    	            <td>0 + 0 =</td>
+    	            <td>00</td>
+    	            <td></td>
+    	        </tr>
+    	        <tr>
+    	            <td>0 + 1 =</td>
+    	            <td>01</td>
+    	        </tr>
+    	        <tr>
+    	            <td>1 + 0 =</td>
+    	            <td>01</td>
+    	        </tr>
+    	        <tr>
+    	            <td>1 + 1 =</td>
+    	            <td>10</td>
+    	        </tr>
+    	    </table>
+    	    <img src = "https://qph.fs.quoracdn.net/main-qimg-c69bee7da1a4f2856f1cf2c05a8bae57" style="display:inline;position: absolute;float:right" width="200" height="200"/>
+    	    <br/>
+    	    <br/>
+    	    <br/> 
+    	    <br/>
+    	    <br/>
+    	    <br/>
+    	    <p>
+    	        This is represented by "^" in javascript and most other languages.
+    	    </p>
+    	    <h3>What about the other column?</h3>
+    	    <p>
+    	        The other column is the carry in a 1-bit adder, since it carries through to the next bit. This carry is only active if both inputs are a 1, which is identical to an AND gate.
+    	    </p>
+    	    <p>
+    	        So an XOR of the input gives you the one bit sum, and an AND of the input gives the carry digit.
+    	    </p>
+    	    
+    	    <h3>I thought this was a 16-bit calculator, not a 1-bit calculator...</h3>
+    	    <p>Correct, but a 16-bit adder can be made by stringing 16 1-bit adders together, or in programming's case doing a for loop 16 times. However we didn't check for what happens if there is a carry digit going into the bit, only a check if there was one going out. To account for this we need to add the carry if it's a one, and check if this carry causes a carry that wouldn't be there before.</p>
+    	    <p>To add this carry in, we can simply use an XOR gate again (it is the basic adder). The inputs this time though are the output from the first XOR, and the carry. This is analogous to when in addition you write the carry over the two numbers and add it into the column as well. The second XOR gate is here but it can only accept two inputs at a time. In the code this is represented by (b1 ^ b2) ^ carry</p>
+    	    <p>However we also need to check if this carry causes a carry for the next bit. The original check we had with the AND gate still applies, but if the output of the XOR gate is one and the previous carry is one it will create a carry for the next bit. This is checked by putting the output of the first XOR gate and the carry into and AND gate, to account for the third value. If this AND gate OR the other AND gate from the start output 1, there is a carry. Both these are put through and OR gate. It is represented in the code like so: <br/> carry = (b1 & b2) || ((b1 ^ b2) & carry)</p>
+    	    <img src ='https://s33.postimg.cc/d57b5xg4v/550px-_Full-adder.svg.png'/>
+    	    <p>Now that each bit can input a carry and two numbers and output a sum and a carry it can be chained as long as necessary, as many bits as needed. I just restricted it to 16-bit to keep it relatively simple and fast.</p>
+    	    <h2>Ok, but that doesn't work for subtraction.</h2>
+    	    <p>True, however in computation there is a system divised for adding negative binary numbers, and it's known as two's compliment. To keep it simple, it's the positive equivalent where each 0 or 1 is flipped, and it is incremented by 1. Not going to go into here, but basically it allows for -5 + 5 to equal 0 which it should. </p>
+    	    <p>To subtract, I do the same thing addition does with a few changes. For one the second number is turned into a negative number, so its a positive + a negative. (The same as subtracting). Then to add one, I used the carry like we learned before, and putting that into the first bit for addition which typically would never have a carry.</p>
+    	    <p>This does cause a problem if the second number is larger than the first however. 1-2 would result in 65535, or 2^16 - 1. Notice the -1 which is the correct answer. To fix this, if the second number is larger the answer is put through the twos compliment again which causes it to be the positive equivalent of the right answer, and a "-" sign is concatenated in front, just so it's usable by humans who use negative numbers in that way.</p>
+    	    <h2>And the rest?</h2>
+    	    <p>Multiplication, division, modulo, and exponents are simple now that we can add and subtract. Multiplication is just recursive adding the number of times specified by the second number. Division is just recursive subtraction, and counting how many times the second number can be subtracted without dropping below 0. Modulo is also just recursive subtraction, except instead of counting it returns the number left over after subtracting as many times as it can before dropping below 0. Finally, exponents are just recursive multiplication specified by the second number</p>
+	    </div>
+		<script src = "script.js">
+	    </script>
+	</body>
+</html>
